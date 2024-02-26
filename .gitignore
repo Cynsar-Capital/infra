@@ -3,6 +3,8 @@
 # Info: https://www.pulumi.com/docs/
 
 .pulumi/
+*.pyc
+venv/
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
