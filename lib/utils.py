@@ -21,7 +21,10 @@ def validate_k8s_versions(token: str, k8s_version: str) -> list[str]:
 
     # Check if the request was successful
     if response.status_code != 200:
-        raise Exception("Non 200 response: {resp}".format(resp=response))
+        raise Exception("Non 200 response: {code} and {j}".format(
+            code=response.status_code,
+            j=response.json()
+        ))
     else:
         kubernetes_options = response.json()
         versions = kubernetes_options['options']['versions']
@@ -33,3 +36,5 @@ def validate_k8s_versions(token: str, k8s_version: str) -> list[str]:
                 do_versions.append(version["slug"])
 
         return do_versions
+
+
