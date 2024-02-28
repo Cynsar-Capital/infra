@@ -5,6 +5,7 @@ import pulumi_digitalocean as do
 import os
 import lib.utils as utils
 
+from network import network_stack
 
 # Vesions and other global options
 default_region = "ams3" # All the infra is on amsterdan
@@ -16,15 +17,8 @@ k8s_options = {
 if "DIGITALOCEAN_TOKEN" not in os.environ:
     raise Exception("Missing DIGITALOCEAN_TOKEN")
 
-# Main VPC
-ams_vpc = do.Vpc("ams3-vpc",
-                 region=default_region, 
-                 ip_range="10.110.0.0/20",
-                 name="default-ams3",
-                 opts=pulumi.ResourceOptions(
-                    import_="e955595a-be66-4f4b-83d5-7c6a75ba2dcf",
-                    protect=True
-                ))
+# Network
+aws_vpc = network_stack(default_region)
 
 # K8s Cluster
 do_k8s_versions = utils.validate_k8s_versions(os.environ.get("DIGITALOCEAN_TOKEN"), k8s_options["k8s"])
