@@ -1,12 +1,13 @@
 """A DigitalOcean Python Pulumi program"""
 
-from k8s import k8s_stack
 import pulumi
 import pulumi_digitalocean as do
 import os
 import lib.utils as utils
 
 from network import network_stack
+from k8s import k8s_stack
+from database import mysql_db_stack
 
 # Vesions and other global options
 default_region = "ams3" # All the infra is on amsterdan
@@ -21,6 +22,10 @@ if "DIGITALOCEAN_TOKEN" not in os.environ:
 # Network
 ams_vpc = network_stack(default_region)
 
+# Database
+do_mysql_db = mysql_db_stack(region=default_region, vpc_id=ams_vpc.id)
+
+
 # K8s Cluster
 do_k8s_cluster = k8s_stack(region = default_region,
                            k8s_version = k8s_options["k8s"],
@@ -31,15 +36,21 @@ do_k8s_cluster = k8s_stack(region = default_region,
 pulumi.export('kubeconfig',
     do_k8s_cluster.kube_configs.apply(lambda configs: configs[0]['raw_config']))
 
-do_mysql_db = do.DatabaseCluster("mysql-personal", 
-    engine = "mysql", 
-    node_count=1,
-    version="8",
-    region = default_region,
-    size="db-s-1vcpu-1gb",
-    private_network_uuid=ams_vpc.id,
-    opts = pulumi.ResourceOptions(protect=True),
-    tags=["pulumi", "protected"])
+# Get my IP 
+my_ip = utils.get_my_ip()
+
+mysql_firewall = do.DatabaseFirewall("mysql-peronal-firewall", 
+   cluster_id=do_mysql_db.id,
+   rules=[
+        do.DatabaseFirewallRuleArgs(
+            type="k8s",
+            value=do_k8s_cluster.id
+        ),
+        do.DatabaseFirewallRuleArgs(
+            type="ip_addr",
+            value=my_ip
+        )
+   ])
 
 # Collect all in a project
 prod_project = do.Project(resource_name="production",

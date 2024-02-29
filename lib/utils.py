@@ -37,4 +37,17 @@ def validate_k8s_versions(token: str, k8s_version: str) -> list[str]:
 
         return do_versions
 
+def get_my_ip() -> str:
+    """
+    Get the public IP of the machince running the script
+    
+    :return (str): The public IP of the Machine
+    """
+
+    response = requests.get(url = "https://ifconfig.me/all.json", 
+                            headers = { "Content-Type": "application/json"} )
+
+    print(response.json())
+    return response.json()["ip_addr"]
+
 
