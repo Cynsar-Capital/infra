@@ -1,5 +1,6 @@
 """A DigitalOcean Python Pulumi program"""
 
+from k8s import k8s_stack
 import pulumi
 import pulumi_digitalocean as do
 import os
@@ -18,28 +19,13 @@ if "DIGITALOCEAN_TOKEN" not in os.environ:
     raise Exception("Missing DIGITALOCEAN_TOKEN")
 
 # Network
-aws_vpc = network_stack(default_region)
+ams_vpc = network_stack(default_region)
 
 # K8s Cluster
-do_k8s_versions = utils.validate_k8s_versions(os.environ.get("DIGITALOCEAN_TOKEN"), k8s_options["k8s"])
-
-pulumi.log.info("Available k8s versions: {v}".format(v=do_k8s_versions))
-
-if k8s_options["do"] not in do_k8s_versions:
-    raise Exception("The version that is available in DO is not the same")
-
-# Create a digital ocean kubernetes cluster
-do_k8s_cluster = do.KubernetesCluster("do-k8s-cluster",
-    region=default_region,
-    version=k8s_options["do"],
-    node_pool={
-        "name": "default-pool",
-        "size": "s-2vcpu-2gb",
-        "node_count": 3,
-    },
-    vpc_uuid=ams_vpc.id,
-    tags=["pulumi", "k8s-cluster"]
-)
+do_k8s_cluster = k8s_stack(region = default_region,
+                           k8s_version = k8s_options["k8s"],
+                           do_version = k8s_options["do"],
+                           vpc_id= ams_vpc.id)
 
 # Export the cluster's kubeconfig
 pulumi.export('kubeconfig',
