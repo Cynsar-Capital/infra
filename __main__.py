@@ -8,6 +8,7 @@ import lib.utils as utils
 from network import network_stack
 from k8s import k8s_stack
 from database import mysql_db_stack
+from ghost import ghost_db_stack
 
 # Vesions and other global options
 default_region = "ams3" # All the infra is on amsterdan
@@ -33,11 +34,17 @@ do_k8s_cluster = k8s_stack(region = default_region,
                            vpc_id= ams_vpc.id)
 
 # Export the cluster's kubeconfig
-pulumi.export('kubeconfig',
-    do_k8s_cluster.kube_configs.apply(lambda configs: configs[0]['raw_config']))
+kubeconfig = do_k8s_cluster.kube_configs.apply(lambda configs: configs[0]['raw_config'])
+kubeconfig_file = pulumi.Output.all(kubeconfig).apply(
+    lambda args: pulumi.AssetArchive({
+        'kubeconfig.yaml': pulumi.StringAsset(args[0])
+    })
+)
 
-# Get my IP 
-my_ip = utils.get_my_ip()
+with open("kubeconfig.yaml", "w") as f:
+    f.write(kubeconfig_file)
+
+pulumi.export("kubeconfig", kubeconfig_file)
 
 mysql_firewall = do.DatabaseFirewall("mysql-peronal-firewall", 
    cluster_id=do_mysql_db.id,
@@ -48,7 +55,7 @@ mysql_firewall = do.DatabaseFirewall("mysql-peronal-firewall",
         ),
         do.DatabaseFirewallRuleArgs(
             type="ip_addr",
-            value=my_ip
+            value=utils.get_my_ip()
         )
    ])
 
@@ -60,4 +67,7 @@ prod_project = do.Project(resource_name="production",
     is_default=False,
     resources=[do_k8s_cluster.cluster_urn,
                do_mysql_db.cluster_urn])
+
+
+ghost_db_stack(do_mysql_db.id)
 

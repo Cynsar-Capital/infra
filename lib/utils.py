@@ -47,7 +47,6 @@ def get_my_ip() -> str:
     response = requests.get(url = "https://ifconfig.me/all.json", 
                             headers = { "Content-Type": "application/json"} )
 
-    print(response.json())
     return response.json()["ip_addr"]
 
 
