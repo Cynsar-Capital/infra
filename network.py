@@ -17,13 +17,13 @@ def network_stack(default_region: str, provider: str):
         do_vpc = do.Vpc(
             "do-vpc",
             region=default_region,
-            ip_range="10.110.0.0/20",
             name="default-vpc",
             opts=pulumi.ResourceOptions(
                 protect=True  # Protect the resource from accidental deletion
             )
         )
         pulumi.export('do_vpc_name', do_vpc.name)
+        pulumi.export('do_vpc_id', do_vpc.id)
 
     else:
         raise ValueError(f"Unsupported provider: {provider}")

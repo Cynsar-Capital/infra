@@ -1,14 +1,14 @@
 import requests
 
-def validate_k8s_versions(token: str, k8s_version: str) -> list[str]:
+def validate_k8s_versions(token: str, k8s_version: str) -> str:
     """
     Get the available kubernetes versions for a given region
     https://docs.digitalocean.com/reference/api/api-reference/#operation/kubernetes_list_options
 
     :param token (str): DigitalOcean API Token
     :param k8s_version (str): The kubernetes version to get the specified DO version slug
-    :return (list[str]): A list of available kubernetes versions
-    :raises Excpection if the request gives a non 200 error
+    :return (str): The matching DigitalOcean version slug
+    :raises Exception if the request gives a non-200 error or if the specified version is not available
     """
 
     kubernetes_options_url = "https://api.digitalocean.com/v2/kubernetes/options"
@@ -16,8 +16,8 @@ def validate_k8s_versions(token: str, k8s_version: str) -> list[str]:
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"
     }
-    response = requests.get(kubernetes_options_url, headers=headers)
 
+    response = requests.get(kubernetes_options_url, headers=headers)
 
     # Check if the request was successful
     if response.status_code != 200:
@@ -28,25 +28,21 @@ def validate_k8s_versions(token: str, k8s_version: str) -> list[str]:
     else:
         kubernetes_options = response.json()
         versions = kubernetes_options['options']['versions']
-        
-        do_versions = []
 
         for version in versions:
-            if version["kubernetes_version"] == k8s_version:
-                do_versions.append(version["slug"])
+            if version["slug"].startswith(k8s_version):
+                return version["slug"]
 
-        return do_versions
+        raise Exception(f"The specified version '{k8s_version}' is not available in DigitalOcean.")
 
 def get_my_ip() -> str:
     """
     Get the public IP of the machince running the script
-    
+
     :return (str): The public IP of the Machine
     """
 
-    response = requests.get(url = "https://ifconfig.me/all.json", 
+    response = requests.get(url = "https://ifconfig.me/all.json",
                             headers = { "Content-Type": "application/json"} )
 
     return response.json()["ip_addr"]
-
-

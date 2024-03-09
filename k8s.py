@@ -19,11 +19,9 @@ def k8s_stack(region: str, k8s_version: str, provider: str, vpc_id: str = None):
 
     elif provider.lower() == 'do':
         # Validate DigitalOcean Kubernetes versions
+        print(k8s_version)
         do_k8s_versions = utils.validate_k8s_versions(os.environ.get("DIGITALOCEAN_TOKEN"), k8s_version)
         pulumi.log.info(f"Available k8s versions: {do_k8s_versions}")
-
-        if k8s_version not in do_k8s_versions:
-            raise Exception("The specified version is not available in DigitalOcean.")
 
         # Create a DigitalOcean Kubernetes cluster
         do_cluster = do.KubernetesCluster(

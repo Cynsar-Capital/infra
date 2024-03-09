@@ -5,6 +5,10 @@ runtime:
     virtualenv: venv
 description: Cynsar Capital Production Infrastruture
 config:
-  pulumi:tags:
-    value:
-      pulumi:template: ""
+  provider: do
+  default_region: nyc3
+  deploy_network: true
+  deploy_k8s: true
+  k8s_version: 1.29.1-do.0
+  deploy_ghost: true
+  deploy_mysql: true
