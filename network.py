@@ -1,17 +1,31 @@
-# Reparted version for the network stack
-
 import pulumi
+import pulumi_google_native.compute.v1 as gcp_compute
 import pulumi_digitalocean as do
 
+def network_stack(default_region: str, provider: str):
+    if provider.lower() == 'gcp':
+        # Google Cloud VPC Network
+        gcp_vpc = gcp_compute.Network(
+            "gcp-vpc",
+            auto_create_subnetworks=True,  # Automatically create subnetworks in each region
+            description="A VPC network for GCP resources"
+        )
+        pulumi.export('gcp_vpc_name', gcp_vpc.name)
 
-def network_stack(default_region: str):
-    ams_vpc = do.Vpc("ams3-vpc",
-                     region=default_region,
-                     ip_range="10.110.0.0/20",
-                     name="default-ams3",
-                     opts=pulumi.ResourceOptions(
-                        import_="e955595a-be66-4f4b-83d5-7c6a75ba2dcf",
-                        protect=True
-                    ))
+    elif provider.lower() == 'do':
+        # DigitalOcean VPC
+        do_vpc = do.Vpc(
+            "do-vpc",
+            region=default_region,
+            ip_range="10.110.0.0/20",
+            name="default-vpc",
+            opts=pulumi.ResourceOptions(
+                protect=True  # Protect the resource from accidental deletion
+            )
+        )
+        pulumi.export('do_vpc_name', do_vpc.name)
 
-    return ams_vpc
+    else:
+        raise ValueError(f"Unsupported provider: {provider}")
+
+    return gcp_vpc if provider.lower() == 'gcp' else do_vpc

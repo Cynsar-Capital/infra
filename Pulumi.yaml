@@ -3,7 +3,7 @@ runtime:
   name: python
   options:
     virtualenv: venv
-description: Cynsar Production Infrastruture
+description: Cynsar Capital Production Infrastruture
 config:
   pulumi:tags:
     value:
