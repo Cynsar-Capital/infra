@@ -1,0 +1,6 @@
+config:
+  cynsar-infra:default_region: us-central1
+  cynsar-infra:deploy_k8s: "true"
+  cynsar-infra:deploy_network: "true"
+  cynsar-infra:provider: gcp
+  google-native:project: new-project-412511
